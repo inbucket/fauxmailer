@@ -1,5 +1,6 @@
 fauxmailer
 =============================================================================
+[![Build Status](https://travis-ci.org/jhillyerd/fauxmailer.svg?branch=master)](https://travis-ci.org/jhillyerd/fauxmailer)
 
 fauxmailer will generate random emails, and send them via SMTP.
 
