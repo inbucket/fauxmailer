@@ -1,4 +1,4 @@
-# fauxmailer
+fauxmailer
 =============================================================================
 
 fauxmailer will generate random emails, and send them via SMTP.
