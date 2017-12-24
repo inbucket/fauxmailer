@@ -12,7 +12,7 @@ You will need a functioning [Go installation][Google Go] for this to work.
 
 Grab the fauxmailer source code and compile the executable:
 
-    go get -v github.com/jhillyerd/fauxmail
+    go get -v github.com/jhillyerd/fauxmailer
 
 ## About
 

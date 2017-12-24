@@ -15,6 +15,7 @@ import (
 
 var (
 	// Flags
+	delay   = flag.Duration("every", 0, "sends a message every <duration> if non-zero")
 	host    = flag.String("host", "localhost:25", "host:port of SMTP server")
 	silent  = flag.Bool("silent", false, "disable to/from address log")
 	verbose = flag.Bool("verbose", false, "enable verbose output")
@@ -34,16 +35,24 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	m := generateMessage(fake)
-	if !*silent {
-		log.Println(m.from, "->", m.to)
-	}
 	b := new(bytes.Buffer)
-	if err = encodeMessage(b, m); err != nil {
-		log.Fatal(err)
-	}
-	if err = sendMessage(*host, m, b); err != nil {
-		log.Fatal(err)
+	for {
+		m := generateMessage(fake)
+		if !*silent {
+			log.Println(m.from, "->", m.to)
+		}
+		if err = encodeMessage(b, m); err != nil {
+			log.Fatal(err)
+		}
+		if err = sendMessage(*host, m, b); err != nil {
+			log.Fatal(err)
+		}
+		// Loop if delay was specified
+		if *delay > 0 {
+			time.Sleep(*delay)
+		} else {
+			return
+		}
 	}
 }
 
