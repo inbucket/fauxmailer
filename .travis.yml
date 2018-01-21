@@ -8,8 +8,8 @@ before_script:
   - go vet ./...
 
 go:
-  - 1.8.x
   - 1.9.x
+  - "1.10"
 
 script: go test -race -v ./...
 
