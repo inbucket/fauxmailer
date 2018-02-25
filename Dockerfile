@@ -4,7 +4,7 @@
 # Build
 FROM golang:1.9-alpine as builder
 RUN apk add --no-cache ca-certificates git
-WORKDIR /go/src/github.com/jhillyerd/fauxmailer
+WORKDIR /go/src/app
 COPY . .
 RUN go-wrapper download
 RUN go-wrapper install
