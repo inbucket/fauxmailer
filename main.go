@@ -59,7 +59,7 @@ func main() {
 }
 
 // generateMessage uses faker to create a random message struct
-func generateMessage(fake *faker.Faker) *enmime.MailBuilder {
+func generateMessage(fake *faker.Faker) enmime.MailBuilder {
 	// Use provided To address if available
 	var to string
 	if toaddrs != nil {
