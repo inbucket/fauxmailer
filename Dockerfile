@@ -2,18 +2,17 @@
 # https://github.com/jhillyerd/fauxmailer
 
 # Build
-FROM golang:1.9-alpine as builder
+FROM golang:1.11-alpine3.8 as builder
 RUN apk add --no-cache ca-certificates git
-WORKDIR /go/src/github.com/jhillyerd/fauxmailer
+WORKDIR /build
 COPY . .
-RUN go-wrapper download
-RUN go-wrapper install
+ENV CGO_ENABLED 0
+RUN go build -o fauxmailer
 
 # Run in minimal image
-FROM alpine
-RUN apk add --no-cache ca-certificates
+FROM alpine:3.8
 WORKDIR /usr/bin
-COPY --from=builder /go/bin/fauxmailer .
+COPY --from=builder /build/fauxmailer .
 
 # Run
 CMD ["fauxmailer"]
