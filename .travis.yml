@@ -2,14 +2,15 @@ language: go
 sudo: false
 
 env:
-  - DEPLOY_WITH_MAJOR="1.9"
+  global:
+    - GO111MODULE=on
+    - DEPLOY_WITH_MAJOR="1.11"
 
 before_script:
   - go vet ./...
 
 go:
-  - 1.8.x
-  - 1.9.x
+  - "1.11.x"
 
 script: go test -race -v ./...
 
