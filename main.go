@@ -3,6 +3,7 @@ package main // import "github.com/jhillyerd/fauxmailer"
 
 import (
 	"bufio"
+	"bytes"
 	"flag"
 	"fmt"
 	"log"
@@ -44,8 +45,21 @@ func main() {
 			log.Fatal(err)
 		}
 	}
+	buf := &bytes.Buffer{}
 	for {
 		msg := generateMessage(fake)
+		if *verbose {
+			buf.Reset()
+			part, err := msg.Build()
+			if err != nil {
+				log.Fatal(err)
+			}
+			err = part.Encode(buf)
+			if err != nil {
+				log.Fatal(err)
+			}
+			log.Printf("Sending:\n%s", buf.String())
+		}
 		if err = msg.Send(*host, nil); err != nil {
 			log.Fatal(err)
 		}
