@@ -1,5 +1,5 @@
 // Package main (fauxmailer) generates fake emails and sends them via SMTP
-package main
+package main // import "github.com/jhillyerd/fauxmailer"
 
 import (
 	"bufio"
@@ -8,11 +8,11 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
-	"net/smtp"
 	"os"
 	"strings"
 	"time"
 
+	"github.com/jhillyerd/enmime"
 	"github.com/manveru/faker"
 )
 
@@ -32,11 +32,6 @@ var (
 	toaddrs []string
 )
 
-// message represents an unencoded email message
-type message struct {
-	from, to, subject, body string
-}
-
 func main() {
 	flag.Parse()
 	fake, err := faker.New("en")
@@ -50,16 +45,22 @@ func main() {
 			log.Fatal(err)
 		}
 	}
-	b := new(bytes.Buffer)
+	buf := &bytes.Buffer{}
 	for {
-		m := generateMessage(fake)
-		if !*silent {
-			log.Println(m.from, "->", m.to)
+		msg := generateMessage(fake)
+		if *verbose {
+			buf.Reset()
+			part, err := msg.Build()
+			if err != nil {
+				log.Fatal(err)
+			}
+			err = part.Encode(buf)
+			if err != nil {
+				log.Fatal(err)
+			}
+			log.Printf("Sending:\n%s", buf.String())
 		}
-		if err = encodeMessage(b, m); err != nil {
-			log.Fatal(err)
-		}
-		if err = sendMessage(*host, m, b); err != nil {
+		if err = msg.Send(*host, nil); err != nil {
 			log.Fatal(err)
 		}
 		// Loop if delay was specified
@@ -72,7 +73,7 @@ func main() {
 }
 
 // generateMessage uses faker to create a random message struct
-func generateMessage(fake *faker.Faker) message {
+func generateMessage(fake *faker.Faker) enmime.MailBuilder {
 	// Use provided To address if available
 	var to string
 	if toaddrs != nil {
@@ -82,6 +83,7 @@ func generateMessage(fake *faker.Faker) message {
 	}
 	from := fake.Email()
 	company := fake.CompanyName()
+	// Plain text
 	cosig := fmt.Sprintf("%s <%s>, %s\r\n%s, \"%s\"",
 		fake.Name(),
 		from,
@@ -89,46 +91,33 @@ func generateMessage(fake *faker.Faker) message {
 		company,
 		fake.CompanyCatchPhrase())
 	paragraphs := fake.Paragraphs(4, true)
-	paragraphs = append(paragraphs, cosig)
-
-	return message{
-		from:    from,
-		to:      to,
-		subject: strings.Title(fake.CompanyBs()) + " with " + company,
-		body:    strings.Join(paragraphs, "\r\n\r\n"),
-	}
-}
-
-// encodeMessage writes an encoded message to buf b
-func encodeMessage(b *bytes.Buffer, m message) error {
-	b.Reset()
-	b.WriteString("From: ")
-	b.WriteString(m.from)
-	b.WriteString("\r\nTo: ")
-	b.WriteString(m.to)
-	b.WriteString("\r\nDate: ")
-	b.WriteString(time.Now().Format(time.RFC1123Z))
-	b.WriteString("\r\nSubject: ")
-	b.WriteString(m.subject)
-	b.WriteString("\r\nUser-Agent: fauxmailer")
-	b.WriteString("\r\nContent-type: text/plain; charset=utf-8")
-	b.WriteString("\r\n\r\n")
-	b.WriteString(m.body)
+	textp := append(make([]string, 0), paragraphs...)
+	textp = append(textp, cosig)
 	if *signature != "" {
-		b.WriteString("\r\n\r\n--\r\n")
-		b.WriteString(*signature)
+		textp = append(textp, "--\r\n"+*signature)
 	}
-	_, err := b.WriteString("\r\n")
-	return err
-}
-
-// sendMessage connects to specified SMTP host, sends buf b to m.to
-func sendMessage(host string, m message, b *bytes.Buffer) error {
-	to := []string{m.to}
-	if *verbose {
-		log.Printf("Sending:\n%s", b.String())
+	// HTML
+	cosig = fmt.Sprintf("%s &lt;<a href=\"mailto:%s\">%s</a>&gt;, %s<br>\r\n<b>%s</b>, <em>%s</em>",
+		fake.Name(),
+		from,
+		from,
+		fake.JobTitle(),
+		company,
+		fake.CompanyCatchPhrase())
+	htmlp := append(make([]string, 0), paragraphs...)
+	htmlp = append(htmlp, cosig)
+	if *signature != "" {
+		htmlp = append(htmlp, "<small>"+*signature+"</small>")
 	}
-	return smtp.SendMail(host, nil, m.from, to, b.Bytes())
+	if !*silent {
+		log.Println(from, "->", to)
+	}
+	return enmime.Builder().
+		From("", from).
+		To("", to).
+		Subject(strings.Title(fake.CompanyBs()) + " with " + company).
+		Text([]byte(strings.Join(textp, "\r\n\r\n"))).
+		HTML([]byte("<p>" + strings.Join(htmlp, "</p>\r\n<p>") + "</p>"))
 }
 
 // loadToAddresses from specified file, one per line
