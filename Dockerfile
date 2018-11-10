@@ -1,5 +1,5 @@
 # Docker build file for fauxmailer
-# https://github.com/jhillyerd/fauxmailer
+# https://github.com/inbucket/fauxmailer
 
 # Build
 FROM golang:1.11-alpine3.8 as builder

@@ -1,4 +1,4 @@
-module github.com/jhillyerd/fauxmailer
+module github.com/inbucket/fauxmailer
 
 require (
 	github.com/jhillyerd/enmime v0.3.0
