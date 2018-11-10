@@ -1,7 +1,7 @@
 project_name: fauxmailer
 release:
   github:
-    owner: jhillyerd
+    owner: inbucket
     name: fauxmailer
   name_template: '{{.Tag}}'
 brew:
