@@ -14,6 +14,8 @@ import (
 
 	"github.com/jhillyerd/enmime"
 	"github.com/manveru/faker"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 var (
@@ -28,8 +30,9 @@ var (
 	tofile  = flag.String("tofile", "", "optional file containing newline separated To addresses")
 	verbose = flag.Bool("verbose", false, "enable verbose output")
 
-	random  = rand.New(rand.NewSource(time.Now().UnixNano()))
-	toaddrs []string
+	titleCaser = cases.Title(language.English)
+	random     = rand.New(rand.NewSource(time.Now().UnixNano()))
+	toaddrs    []string
 )
 
 func main() {
@@ -125,7 +128,7 @@ func generateMessage(fake *faker.Faker) enmime.MailBuilder {
 	return enmime.Builder().
 		From("", from).
 		To("", to).
-		Subject(strings.Title(fake.CompanyBs()) + " with " + company).
+		Subject(titleCaser.String(fake.CompanyBs()) + " with " + company).
 		Text([]byte(strings.Join(textp, "\r\n\r\n"))).
 		HTML([]byte("<p>" + strings.Join(htmlp, "</p>\r\n<p>") + "</p>"))
 }
