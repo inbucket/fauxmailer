@@ -1,4 +1,4 @@
-// Package main (fauxmailer) generates fake emails and sends them via SMTP
+// Package main (fauxmailer) generates fake emails and sends them via SMTP.
 package main // import "github.com/inbucket/fauxmailer"
 
 import (
@@ -17,7 +17,7 @@ import (
 )
 
 var (
-	// Flags
+	// Flags.
 	delay     = flag.Duration("every", 0, "sends a message every <duration> if non-zero")
 	host      = flag.String("host", "localhost:25", "host:port of SMTP server")
 	signature = flag.String(
@@ -38,13 +38,15 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	// Load To address set if specified
+
+	// Load To address set if specified.
 	if *tofile != "" {
 		err = loadToAddresses()
 		if err != nil {
 			log.Fatal(err)
 		}
 	}
+
 	sender := enmime.NewSMTP(*host, nil)
 	buf := &bytes.Buffer{}
 	for {
@@ -61,10 +63,12 @@ func main() {
 			}
 			log.Printf("Sending:\n%s", buf.String())
 		}
+
 		if err = msg.Send(sender); err != nil {
 			log.Fatal(err)
 		}
-		// Loop if delay was specified
+
+		// Loop if delay was specified.
 		if *delay > 0 {
 			time.Sleep(*delay)
 		} else {
@@ -73,9 +77,9 @@ func main() {
 	}
 }
 
-// generateMessage uses faker to create a random message struct
+// generateMessage uses faker to create a random message struct.
 func generateMessage(fake *faker.Faker) enmime.MailBuilder {
-	// Use provided To address if available
+	// Use provided To address if available.
 	var to string
 	if toaddrs != nil {
 		to = toaddrs[random.Intn(len(toaddrs))]
@@ -84,7 +88,8 @@ func generateMessage(fake *faker.Faker) enmime.MailBuilder {
 	}
 	from := fake.Email()
 	company := fake.CompanyName()
-	// Plain text
+
+	// Plain text.
 	cosig := fmt.Sprintf("%s <%s>, %s\r\n%s, \"%s\"",
 		fake.Name(),
 		from,
@@ -97,7 +102,8 @@ func generateMessage(fake *faker.Faker) enmime.MailBuilder {
 	if *signature != "" {
 		textp = append(textp, "--\r\n"+*signature)
 	}
-	// HTML
+
+	// HTML.
 	cosig = fmt.Sprintf("%s &lt;<a href=\"mailto:%s\">%s</a>&gt;, %s<br>\r\n<b>%s</b>, <em>%s</em>",
 		fake.Name(),
 		from,
@@ -107,12 +113,15 @@ func generateMessage(fake *faker.Faker) enmime.MailBuilder {
 		fake.CompanyCatchPhrase())
 	htmlp := append(make([]string, 0), paragraphs...)
 	htmlp = append(htmlp, cosig)
+
 	if *signature != "" {
 		htmlp = append(htmlp, "<small>"+*signature+"</small>")
 	}
+
 	if !*silent {
 		log.Println(from, "->", to)
 	}
+
 	return enmime.Builder().
 		From("", from).
 		To("", to).
@@ -121,12 +130,13 @@ func generateMessage(fake *faker.Faker) enmime.MailBuilder {
 		HTML([]byte("<p>" + strings.Join(htmlp, "</p>\r\n<p>") + "</p>"))
 }
 
-// loadToAddresses from specified file, one per line
+// loadToAddresses from specified file, one per line.
 func loadToAddresses() error {
 	f, err := os.Open(*tofile)
 	if err != nil {
 		return err
 	}
+
 	toaddrs = make([]string, 0)
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
@@ -138,5 +148,6 @@ func loadToAddresses() error {
 			}
 		}
 	}
+
 	return scanner.Err()
 }
