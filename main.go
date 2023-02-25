@@ -45,6 +45,7 @@ func main() {
 			log.Fatal(err)
 		}
 	}
+	sender := enmime.NewSMTP(*host, nil)
 	buf := &bytes.Buffer{}
 	for {
 		msg := generateMessage(fake)
@@ -60,7 +61,7 @@ func main() {
 			}
 			log.Printf("Sending:\n%s", buf.String())
 		}
-		if err = msg.Send(*host, nil); err != nil {
+		if err = msg.Send(sender); err != nil {
 			log.Fatal(err)
 		}
 		// Loop if delay was specified
