@@ -4,7 +4,7 @@
     flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, nixpkgs, flake-utils }:
+  outputs = { nixpkgs, flake-utils, ... }:
     flake-utils.lib.eachDefaultSystem
       (system:
         let
@@ -13,7 +13,7 @@
         {
           devShell = pkgs.mkShell {
             buildInputs = with pkgs; [
-              go_1_20
+              go_1_21
               golint
               gopls
             ];
